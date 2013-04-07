@@ -12,6 +12,7 @@ class OdfException extends Exception
  *
  * @copyright  GPL License 2008 - Julien Pauli - Cyril PIERRE de GEYER - Anaska (http://www.anaska.com)
  * @copyright  GPL License 2010 - Laurent Destailleur - eldy@users.sourceforge.net
+ * @copyright  GPL License 2010 -  Vikas Mahajan - http://vikasmahajan.wordpress.com
  * @copyright  GPL License 2012 - Stephen Larroque - lrq3000@gmail.com
  * @license    http://www.gnu.org/copyleft/gpl.html  GPL License
  * @version 1.4.5 (last update 2013-04-07)
@@ -411,6 +412,39 @@ IMG;
 			header('Content-Length: '.filesize($this->tmpfile));
 			readfile($this->tmpfile);
 		}
+
+		/**
+		 * Convert the ODT file to PDF and export the file as attached file by HTTP
+		 * Note: you need to have JODConverter and OpenOffice or LibreOffice installed and executable on the same system as where this php script will be executed. You also need to chmod +x odt2pdf.sh
+		 *
+		 * @param string $name (optional)
+		 * @throws OdfException
+		 * @return void
+		 */
+		public function exportAsAttachedPDF($name="")
+                {
+                    if( $name == "" ) $name = md5(uniqid());
+
+                    $this->saveToDisk("$name.odt");
+                    exec("./odt2pdf.sh $name",$output,$ret_val);
+                    if($ret_val == 0)
+                    {
+                        if (headers_sent($filename, $linenum)) {
+                            throw new OdfException("headers already sent ($filename at $linenum)");
+                        }
+
+                        header('Content-type: application/pdf');
+                        header('Content-Disposition: attachment; filename="'.$name.'.pdf"');
+                        readfile("$name.pdf");
+                        unlink("$name.odt");
+                        unlink("$name.pdf");
+                    } else {
+                        echo "Error occured:<br>";
+                        foreach($output as $line)
+                            echo $line."<br>";
+                    }
+		}
+
 		/**
 		 * Returns a variable of configuration
 		 *
