@@ -15,7 +15,7 @@ class OdfException extends Exception
  * @copyright  GPL License 2010 -  Vikas Mahajan - http://vikasmahajan.wordpress.com
  * @copyright  GPL License 2012 - Stephen Larroque - lrq3000@gmail.com
  * @license    http://www.gnu.org/copyleft/gpl.html  GPL License
- * @version 1.4.5 (last update 2013-04-07)
+ * @version 1.4.6 (last update 2013-04-07)
  */
 class Odf
 {
