@@ -14,7 +14,7 @@ class OdfException extends Exception
  * @copyright  GPL License 2010 - Laurent Destailleur - eldy@users.sourceforge.net
  * @copyright  GPL License 2012 - Stephen Larroque - lrq3000@gmail.com
  * @license    http://www.gnu.org/copyleft/gpl.html  GPL License
- * @version 1.4.4 (last update 2012-07-29)
+ * @version 1.4.5 (last update 2013-04-07)
  */
 class Odf
 {
@@ -390,7 +390,7 @@ IMG;
 		/**
 		 * Export the file as attached file by HTTP
 		 *
-		 * @param string $name (optionnal)
+		 * @param string $name (optional)
 		 * @throws OdfException
 		 * @return void
 		 */
@@ -408,6 +408,7 @@ IMG;
 
 			header('Content-type: application/vnd.oasis.opendocument.text');
 			header('Content-Disposition: attachment; filename="'.$name.'"');
+			header('Content-Length: '.filesize($this->tmpfile));
 			readfile($this->tmpfile);
 		}
 		/**
