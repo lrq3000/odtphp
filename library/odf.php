@@ -85,7 +85,7 @@ class Odf
 				throw new OdfException("Nothing to parse - Check that the content.xml file is correctly formed in source file '$filename'");
 			}
 			if (($this->manifestXml = $this->file->getFromName('META-INF/manifest.xml')) === false) {
- 				throw new OdfException("Something is wrong with META-INF/manifest.xm in source file '$filename'");
+ 				throw new OdfException("Something is wrong with META-INF/manifest.xml in source file '$filename'");
 			}
 			if (($this->stylesXml = $this->file->getFromName('styles.xml')) === false) {
 				throw new OdfException("Nothing to parse - Check that the styles.xml file is correctly formed in source file '$filename'");
@@ -113,18 +113,19 @@ class Odf
 		 */
 		public function setVars($key, $value, $encode = true, $charset = 'ISO-8859')
 		{
+                    $tag = $this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT'];
 		    // TODO Warning string may be:
 		    // <text:span text:style-name="T13">{</text:span><text:span text:style-name="T12">aaa</text:span><text:span text:style-name="T13">}</text:span>
 		    // instead of {aaa} so we should enhance this function.
             //print $key.'-'.$value.'-'.strpos($this->contentXml, $this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT']).'<br>';
-		    if (strpos($this->contentXml, $this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT']) === false) {
+		    if (strpos($this->contentXml, $tag) === false && strpos($this->stylesXml , $tag) === false) {
                 //if (strpos($this->contentXml, '">'. $key . '</text;span>') === false) {
 		        throw new OdfException("var $key not found in the document");
                 //}
 		    }
 			$value = $encode ? htmlspecialchars($value) : $value;
 			$value = ($charset == 'ISO-8859') ? utf8_encode($value) : $value;
-			$this->vars[$this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT']] = str_replace("\n", "<text:line-break/>", $value);
+			$this->vars[$tag] = str_replace("\n", "<text:line-break/>", $value);
 			return $this;
 		}
 
@@ -172,7 +173,7 @@ class Odf
 			$width *= self::PIXEL_TO_CM;
 			$height *= self::PIXEL_TO_CM;
 			$xml = <<<IMG
-			<draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="char" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
+			<draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="aschar" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
 IMG;
 			$this->images[$value] = $file;
 			$this->setVars($key, $xml, false);

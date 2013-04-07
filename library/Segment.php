@@ -157,7 +157,7 @@ class Segment implements IteratorAggregate, Countable
         $width *= Odf::PIXEL_TO_CM;
         $height *= Odf::PIXEL_TO_CM;
         $xml = <<<IMG
-<draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="char" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
+<draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="aschar" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
 IMG;
         $this->images[$value] = $file;
         $this->setVars($key, $xml, false);
