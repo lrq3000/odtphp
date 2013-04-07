@@ -14,7 +14,7 @@ class OdfException extends Exception
  * @copyright  GPL License 2010 - Laurent Destailleur - eldy@users.sourceforge.net
  * @copyright  GPL License 2012 - Stephen Larroque - lrq3000@gmail.com
  * @license    http://www.gnu.org/copyleft/gpl.html  GPL License
- * @version 1.4.3 (last update 2012-07-29)
+ * @version 1.4.4 (last update 2012-07-29)
  */
 class Odf
 {
@@ -126,6 +126,30 @@ class Odf
 			$value = ($charset == 'ISO-8859') ? utf8_encode($value) : $value;
 			$this->vars[$this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT']] = str_replace("\n", "<text:line-break/>", $value);
 			return $this;
+		}
+
+		/**
+		 * Evaluating php codes inside the ODT and output the buffer (print, echo) inplace of the code
+		 *
+		 */
+		public function phpEval()
+		{
+			preg_match_all('/[\{\<]\?(php)?\s+(?P<content>.+)\?[\}\>]/iU',$this->contentXml, $matches); // detecting all {?php code ?} or <?php code ? >
+			for ($i=0;$i < count($matches['content']);$i++) {
+				try {
+				$ob_output = ''; // flush the output for each code. This var will be filled in by the eval($code) and output buffering : any print or echo or output will be redirected into this variable
+				$code = $matches['content'][$i];
+				ob_start();
+				eval ($code);
+				$ob_output = ob_get_contents(); // send the content of the buffer into $ob_output
+				$this->contentXml = str_replace($matches[0][$i], $ob_output, $this->contentXml);
+				ob_end_clean();
+				} catch (Exception $e) {
+					ob_end_clean();
+					$this->contentXml = str_replace($matches[0][$i], 'ERROR: there was a problem while evaluating this portion of code, please fix it: '.$e, $this->contentXml);
+				}
+			}
+			return 0;
 		}
 
 		/**
