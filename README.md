@@ -1,13 +1,21 @@
-odtphp
+odtphp - ODT document generator using PHP
 ======
 
-Générateur de document ODT à partir de PHP
+Description
+----------------
 
-Projet initial (version 1.0.1) : http://www.odtphp.com/
+OdtPHP is a PHP library designed to use OpenDocument file as a template for PHP. It's a kind of PHPLib for OpenOffice document.
 
-Intégration des modifications de : http://vikasmahajan.wordpress.com/2010/12/09/odtphp-bug-solved/  
-Résoud les bugs d'insertion d'image et d'insertion dans l'en-tête et le pied de page.
+This is an unofficial updated fork from the official odtphp project.
 
-J'explore ce projet qui semble "à l'abandon" mais fait parfaitement ce dont j'ai besoin.
+This project aims to bring some community updates that will never make it into the official project since it is now abandoned.
 
-J'intégrerai ici mes modestes contributions et/ou exemples.
+This project is currently used in real applications, such as Dolibarr. As thus, the project is pretty much stable and used by hundreds of users.
+
+Old project
+----------------
+The original website of odtphp, now gone:
+http://www.odtphp.com/
+
+The latest official release of odtphp v1.0.1 is still available on the official sourceforge repository:
+http://sourceforge.net/projects/odtphp/
