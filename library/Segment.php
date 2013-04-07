@@ -93,7 +93,10 @@ class Segment implements IteratorAggregate, Countable
         $this->file->open($this->odf->getTmpfile());
         foreach ($this->images as $imageKey => $imageValue) {
 			if ($this->file->getFromName('Pictures/' . $imageValue) === false) {
+				// Add the image inside the ODT document
 				$this->file->addFile($imageKey, 'Pictures/' . $imageValue);
+				// Add the image to the Manifest (which maintains a list of images, necessary to avoid "Corrupt ODT file. Repair?" when opening the file with LibreOffice)
+				$this->odf->addImageToManifest($imageValue);
 			}
         }
         $this->file->close();

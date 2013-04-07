@@ -361,8 +361,10 @@ IMG;
 				throw new OdfException('Error during file export addFromString');
 			}
 			foreach ($this->images as $imageKey => $imageValue) {
+				// Add the image inside the ODT document
 				$this->file->addFile($imageKey, 'Pictures/' . $imageValue);
-            	$this->addImageToManifest($imageValue);
+                                // Add the image to the Manifest (which maintains a list of images, necessary to avoid "Corrupt ODT file. Repair?" when opening the file with LibreOffice)
+				$this->addImageToManifest($imageValue);
 			}
         	if (! $this->file->addFromString('./META-INF/manifest.xml', $this->manifestXml)) {
             	throw new OdfException('Error during file export: manifest.xml');
@@ -377,9 +379,12 @@ IMG;
 		 */
 		public function addImageToManifest($file)
 		{
-		        $extension = explode('.', $file);
-		        $add = ' <manifest:file-entry manifest:media-type="image/'.$extension[1].'" manifest:full-path="Pictures/'.$file.'"/>'."\n";
-		        $this->manifestXml = str_replace('</manifest:manifest>', $add.'</manifest:manifest>', $this->manifestXml);
+                        // Get the file extension
+		        $ext = substr(strrchr($val, '.'), 1);
+                        // Create the correct image XML entry to add to the manifest (this is necessary because ODT format requires that we keep a list of the images in the manifest.xml)
+		        $add = ' <manifest:file-entry manifest:media-type="image/'.$ext.'" manifest:full-path="Pictures/'.$file.'"/>'."\n";
+                        // Append the image to the manifest
+		        $this->manifestXml = str_replace('</manifest:manifest>', $add.'</manifest:manifest>', $this->manifestXml); // we replace the manifest closing tag by the image XML entry + manifest closing tag (this results in appending the data, we do not overwrite anything)
 		}
 
 		/**
