@@ -157,9 +157,14 @@ class Segment implements IteratorAggregate, Countable
         if ($size === false) {
             throw new OdfException("Invalid image");
         }
+        // Set the width and height of the page
         list ($width, $height) = $size;
         $width *= Odf::PIXEL_TO_CM;
         $height *= Odf::PIXEL_TO_CM;
+        // Fix local-aware issues (eg: 12,10 -> 12.10)
+        $width = sprintf("%F", $width);
+        $height = sprintf("%F", $height);
+
         $xml = <<<IMG
 <draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="aschar" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
 IMG;
