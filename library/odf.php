@@ -1,4 +1,6 @@
 <?php
+require_once 'zip/PclZipProxy.php';
+require_once 'zip/PhpZipProxy.php';
 require 'Segment.php';
 class OdfException extends Exception
 {}
