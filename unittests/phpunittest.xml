@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "phpunit.dtd" >
+<phpunit>
+<filter>
+  <blacklist>
+    <directory>../tests/</directory>
+    <directory>../documentation/</directory>
+    <directory>../unittests/</directory>
+  </blacklist>
+  <whitelist>
+    <directory suffix=".php">../library/</directory>
+  </whitelist>
+</filter>
+</phpunit>
