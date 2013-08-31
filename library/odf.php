@@ -1,6 +1,4 @@
 <?php
-require_once 'zip/PclZipProxy.php';
-require_once 'zip/PhpZipProxy.php';
 require 'Segment.php';
 include_once dirname(__FILE__).'/xhtml2odt/xhtml2odt.php';
 class OdfException extends Exception
