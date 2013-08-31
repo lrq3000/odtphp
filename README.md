@@ -12,8 +12,18 @@ This project aims to bring some community updates (including my own) that will n
 
 This project is currently used in real applications, such as Dolibarr. As thus, the project is pretty much stable and used by hundreds of users.
 
+Installation
+----------------
+
+You only need to copy all the files inside the 'library' folder, and then include 'odf.php'.
+
+From there, simply instanciate the Odf class, and then use the methods (commented in the sourcecode).
+
+[TODO: More details on usage should be added here]
+
 Old project
 ----------------
+
 The original website of odtphp, now gone:
 http://www.odtphp.com/
 
