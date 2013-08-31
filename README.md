@@ -30,3 +30,5 @@ For reference, you can find some of those changes in this blog post:
 http://vikasmahajan.wordpress.com/2010/12/09/odtphp-bug-solved/
 
 And also in the Dolibarr project.
+
+Warm thank's to Aurélien Bompard for his xhtml2odt project (xhtml2odt.org).

@@ -2,6 +2,7 @@
 require_once 'zip/PclZipProxy.php';
 require_once 'zip/PhpZipProxy.php';
 require 'Segment.php';
+include_once dirname(__FILE__).'/xhtml2odt/xhtml2odt.php';
 class OdfException extends Exception
 {}
 /**
@@ -13,9 +14,9 @@ class OdfException extends Exception
  * @copyright  GPL License 2008 - Julien Pauli - Cyril PIERRE de GEYER - Anaska (http://www.anaska.com)
  * @copyright  GPL License 2010 - Laurent Destailleur - eldy@users.sourceforge.net
  * @copyright  GPL License 2010 -  Vikas Mahajan - http://vikasmahajan.wordpress.com
- * @copyright  GPL License 2012 - Stephen Larroque - lrq3000@gmail.com
+ * @copyright  GPL License 2012-2013 - Stephen Larroque - lrq3000@gmail.com
  * @license    http://www.gnu.org/copyleft/gpl.html  GPL License
- * @version 1.4.6 (last update 2013-04-07)
+ * @version 1.5.0 (last update 2013-08-31)
  */
 class Odf
 {
@@ -34,7 +35,9 @@ class Odf
 		protected $images = array();
 		protected $vars = array();
 		protected $segments = array();
+		protected $x2o; // xhtml2odt instance
 		const PIXEL_TO_CM = 0.026458333;
+
 		/**
 		 * Class constructor
 		 *
@@ -101,6 +104,8 @@ class Odf
 			copy($filename, $this->tmpfile);
 
 			$this->_moveRowSegments();
+
+			$this->x2o = new ODTFile(dirname(__FILE__).'/xhtml2odt/template.odt');
 		}
 
 		/**
@@ -108,26 +113,51 @@ class Odf
 		 *
 		 * @param string $key name of the variable within the template
 		 * @param string $value replacement value
-		 * @param bool $encode if true, special XML characters are encoded
+		 * @param bool $encode false/true/'auto' - if true, special XML characters are encoded (thus HTML/XML code becomes inactive and will be printed in the ODT as normal characters); if 'auto' strings containing HTML won't be encoded
+		 * @param string $charset define the charset of the input (will be converted into UTF-8)
+		 * @param bool $xhtml2odt try to convert html strings into odt? ($encode must be 'auto' or false)
 		 * @throws OdfException
 		 * @return odf
 		 */
-		public function setVars($key, $value, $encode = true, $charset = 'ISO-8859')
+		public function setVars($key, $value, $encode = 'auto', $charset = 'ISO-8859', $xhtml2odt = true)
 		{
                     $tag = $this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT'];
 		    // TODO Warning string may be:
 		    // <text:span text:style-name="T13">{</text:span><text:span text:style-name="T12">aaa</text:span><text:span text:style-name="T13">}</text:span>
 		    // instead of {aaa} so we should enhance this function.
-            //print $key.'-'.$value.'-'.strpos($this->contentXml, $this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT']).'<br>';
+
+		    //print $key.'-'.$value.'-'.strpos($this->contentXml, $this->config['DELIMITER_LEFT'] . $key . $this->config['DELIMITER_RIGHT']).'<br>'; // debug
+
+		    // Check that the key exists in the document
 		    if (strpos($this->contentXml, $tag) === false && strpos($this->stylesXml , $tag) === false) {
-                //if (strpos($this->contentXml, '">'. $key . '</text;span>') === false) {
-		        throw new OdfException("var $key not found in the document");
-                //}
+			//if (strpos($this->contentXml, '">'. $key . '</text;span>') === false) {
+			throw new OdfException("var $key not found in the document");
+			//}
 		    }
-			$value = $encode ? htmlspecialchars($value) : $value;
-			$value = ($charset == 'ISO-8859') ? utf8_encode($value) : $value;
-			$this->vars[$tag] = str_replace("\n", "<text:line-break/>", $value);
-			return $this;
+
+		    // Convert xhtml to ODT if an html tag is detected in the value
+		    if ($encode !== true and $xhtml2odt === true and
+			preg_match("/([\<])([^\>]{1,})*([\>])/i", $value)) {
+
+			$value = trim($value); // trim invisible spaces at the begininng (help us know if either this is only a text or if it's already contained in its own html-odt object like a table. Depending on the case, we need to prepend or not the <text:p> tag)
+			$value = $this->x2o->xhtml2odt($value, true); // convert xhtml to odt
+			$value = trim($value); // trim spaces added by the conversion
+			if (preg_match('/^<[^:]+:[^>]+>/i', $value) == 1 and preg_match('#^<text:line-break/>#i', $value) != 1) { // if the string is not just text (eg: a table, it begins with an ODT tag different than a line-break)
+				$value = '</text:p>'.$value.'<text:p>'; // do a trick to make the text paragraph before stops while still being a valid ODT document. FIXME: try to find a better alternative (by moving the </text:p> above where the $value is printed)
+			}
+		    // Else we do some simple processing with the value
+		    } else {
+			// Precleaning
+			$value = str_replace("\n", '', $value); // \n are meaningless
+			$value = preg_replace("#<br\s*/?>#i", "\n", $value); // however <br /> should be replaced by line returns which will later be replaced by ODT line-break (because we can't rely on the tag since it may be encoded as a special char)
+			// Convert the encoding
+			if ($encode !== false) $value = $encode ? htmlspecialchars($value) : $value; // encode html characters to make them inactive
+			$value = ($charset != 'UTF-8') ? utf8_encode($value) : $value; // encode charset into utf8
+			// Do some cleaning
+			$value = str_replace("\n", "<text:line-break/>", $value); // replace line returns with ODT ones
+		    }
+		    $this->vars[$tag] = $value; // store the value
+		    return $this;
 		}
 
 		/**
