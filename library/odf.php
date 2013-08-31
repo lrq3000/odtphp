@@ -445,31 +445,84 @@ IMG;
 		 * Convert the ODT file to PDF and export the file as attached file by HTTP
 		 * Note: you need to have JODConverter and OpenOffice or LibreOffice installed and executable on the same system as where this php script will be executed. You also need to chmod +x odt2pdf.sh
 		 *
-		 * @param string $name (optional)
+		 * @param string $name (optional, with .odt extension)
+		 * @param int $execmethod 1 or 2 - method to execute the script
 		 * @throws OdfException
 		 * @return void
 		 */
-		public function exportAsAttachedPDF($name="")
+		public function exportAsAttachedPDF($name="", $execmethod=1)
                 {
-                    if( $name == "" ) $name = md5(uniqid());
+                    //global $conf;
 
-                    $this->saveToDisk("$name.odt");
-                    exec("./odt2pdf.sh $name",$output,$ret_val);
-                    if($ret_val == 0)
+                    if( $name == "" ) $name = md5(uniqid()).'.odt';
+
+                    //dol_syslog(get_class($this).'::exportAsAttachedPDF $name='.$name, LOG_DEBUG);
+                    $this->saveToDisk($name);
+
+                    //$execmethod=(empty($conf->global->MAIN_EXEC_USE_POPEN)?1:2);	// 1 or 2
+
+                    $name=str_replace('.odt', '', $name);
+
+                    /*
+                    if (!empty($conf->global->MAIN_DOL_SCRIPTS_ROOT)) {
+                            $command = $conf->global->MAIN_DOL_SCRIPTS_ROOT.'/scripts/odt2pdf/odt2pdf.sh '.$name;
+                    }else {
+                            $command = '../../scripts/odt2pdf/odt2pdf.sh '.$name;
+                    }
+                    */
+                    $command = dirname(__FILE__)."/odt2pdf.sh $name";
+
+                    //dol_syslog(get_class($this).'::exportAsAttachedPDF $execmethod='.$execmethod.' Run command='.$command,LOG_DEBUG);
+                    if ($execmethod == 1)
                     {
-                        if (headers_sent($filename, $linenum)) {
-                            throw new OdfException("headers already sent ($filename at $linenum)");
-                        }
+                            exec($command, $output_arr, $retval);
+                    }
+                    if ($execmethod == 2)
+                    {
+                            $ok=0;
+                            $handle = fopen($outputfile, 'w');
+                            if ($handle)
+                            {
+                                    //dol_syslog(get_class($this)."Run command ".$command,LOG_DEBUG);
+                                    $handlein = popen($command, 'r');
+                                    while (!feof($handlein))
+                                    {
+                                            $read = fgets($handlein);
+                                            fwrite($handle,$read);
+                                            $output_arr[]=$read;
+                                    }
+                                    pclose($handlein);
+                                    fclose($handle);
+                            }
+                            //if (! empty($conf->global->MAIN_UMASK)) @chmod($outputfile, octdec($conf->global->MAIN_UMASK));
+                    }
 
-                        header('Content-type: application/pdf');
-                        header('Content-Disposition: attachment; filename="'.$name.'.pdf"');
-                        readfile("$name.pdf");
-                        unlink("$name.odt");
-                        unlink("$name.pdf");
+                    if($retval == 0)
+                    {
+                            //dol_syslog(get_class($this).'::exportAsAttachedPDF $ret_val='.$retval, LOG_DEBUG);
+                            if (headers_sent($filename, $linenum)) {
+                                    throw new OdfException("headers already sent ($filename at $linenum)");
+                            }
+
+                            //if (!empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
+                                    header('Content-type: application/pdf');
+                                    header('Content-Disposition: attachment; filename="'.$name.'.pdf"');
+                                    readfile("$name.pdf");
+                            //}
+                            unlink("$name.odt");
                     } else {
-                        echo "Error occured:<br>";
-                        foreach($output as $line)
-                            echo $line."<br>";
+                            //dol_syslog(get_class($this).'::exportAsAttachedPDF $ret_val='.$retval, LOG_DEBUG);
+                            //dol_syslog(get_class($this).'::exportAsAttachedPDF $output_arr='.var_export($output_arr,true), LOG_DEBUG);
+
+                            if ($retval==126) {
+                                    throw new OdfException('Permission execute convert script : ' . $command);
+                            }
+                            else {
+                                    foreach($output_arr as $line) {
+                                            $errors.= $line."<br>";
+                                    }
+                                    throw new OdfException('ODT to PDF convert fail : ' . $errors);
+                            }
                     }
 		}
 
